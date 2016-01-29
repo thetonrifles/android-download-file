@@ -13,6 +13,7 @@ import java.net.URL;
 
 public class DownloadFragment extends Fragment {
 
+    private String mUrl;
     private Callback mCallback;
 
     public static DownloadFragment newInstance() {
@@ -59,11 +60,12 @@ public class DownloadFragment extends Fragment {
 
         @Override
         protected Object doInBackground(String... urls) {
+            mUrl = urls[0];
             Object response;
             InputStream input = null;
             HttpURLConnection connection = null;
             try {
-                URL url = new URL(urls[0]);
+                URL url = new URL(mUrl);
                 connection = (HttpURLConnection) url.openConnection();
                 connection.connect();
                 // successful response?
@@ -123,7 +125,9 @@ public class DownloadFragment extends Fragment {
             super.onPostExecute(result);
             if (result instanceof String) {
                 if (mCallback != null) {
-                    mCallback.onDownloadCompleted((String) result);
+                    String content = (String) result;
+                    FileStorage.getInstance().writeFile(getContext(), mUrl, content);
+                    mCallback.onDownloadCompleted(content);
                 }
             } else {
                 if (mCallback != null) {

@@ -9,6 +9,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.widget.TextView;
 
 import com.thetonrifles.downloadfile.adapter.AbstractFileAdapter;
 import com.thetonrifles.downloadfile.adapter.FileV2Adapter;
@@ -16,6 +17,7 @@ import com.thetonrifles.downloadfile.parser.FileV2Item;
 import com.thetonrifles.downloadfile.parser.FileV2Parser;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements DownloadFragment.Callback {
@@ -28,6 +30,7 @@ public class MainActivity extends AppCompatActivity implements DownloadFragment.
     private static final String FILE_URL = "https://dl.dropboxusercontent.com/u/44270891/data.txt";
     //private static final String FILE_URL = "https://dl.dropboxusercontent.com/u/44270891/file.txt";
 
+    private TextView mTimestampView;
     private ArrayList<FileV2Item> mContents = new ArrayList<>();
     private AbstractFileAdapter mFileContentAdapter;
 
@@ -36,13 +39,25 @@ public class MainActivity extends AppCompatActivity implements DownloadFragment.
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        List<FileV2Item> contents = null;
+
         if (savedInstanceState != null) {
-            List<FileV2Item> contents = (List<FileV2Item>) savedInstanceState.getSerializable(KEY_LIST);
-            if (contents != null) {
-                mContents.clear();
-                mContents.addAll(contents);
-            }
+            // restoring data after configuration change (e.g. rotation)
+            contents = (List<FileV2Item>) savedInstanceState.getSerializable(KEY_LIST);
+        } else {
+            // trying to get data from local storage
+            String content = FileStorage.getInstance().readFile(this, FILE_URL);
+            contents = (new FileV2Parser()).parse(content);
         }
+
+        if (contents != null) {
+            mContents.clear();
+            mContents.addAll(contents);
+        }
+
+        // building timestamp view
+        mTimestampView = (TextView) findViewById(R.id.txt_timestamp);
+        updateTimestampView();
 
         // building recyclerview
         RecyclerView rv = (RecyclerView) findViewById(R.id.lst_items);
@@ -58,6 +73,16 @@ public class MainActivity extends AppCompatActivity implements DownloadFragment.
             fragment = DownloadFragment.newInstance();
             fm.beginTransaction().add(fragment, "download").commit();
             fragment.executeDownload(FILE_URL);
+        }
+    }
+
+    private void updateTimestampView() {
+        Date timestamp = FileStorage.getInstance().readLastUpdateTimestamp(this);
+        if (timestamp != null) {
+            String update = String.format(getString(R.string.last_update_value), timestamp.toString());
+            mTimestampView.setText(update);
+        } else {
+            mTimestampView.setText(R.string.last_update_none);
         }
     }
 
@@ -118,6 +143,7 @@ public class MainActivity extends AppCompatActivity implements DownloadFragment.
                 mFileContentAdapter.notifyItemRangeChanged(0, newSize);
                 mFileContentAdapter.notifyItemRangeInserted(newSize, oldSize - newSize);
             }
+            updateTimestampView();
         }
     }
 

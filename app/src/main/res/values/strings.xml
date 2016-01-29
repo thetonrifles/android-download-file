@@ -2,5 +2,7 @@
 
     <string name="app_name">DownloadFile</string>
     <string name="action_sync">Sync</string>
+    <string name="last_update_none">Last update at: -</string>
+    <string name="last_update_value">Last update at: %1$s</string>
 
 </resources>

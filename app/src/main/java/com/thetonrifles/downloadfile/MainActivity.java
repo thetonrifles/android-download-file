@@ -10,18 +10,26 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 
+import com.thetonrifles.downloadfile.adapter.AbstractFileAdapter;
+import com.thetonrifles.downloadfile.adapter.FileV2Adapter;
+import com.thetonrifles.downloadfile.parser.FileV2Item;
+import com.thetonrifles.downloadfile.parser.FileV2Parser;
+
 import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements DownloadFragment.Callback {
 
+    private static final Object _LOCK = new Object();
+
     private static final String LOG_TAG = "Downloader";
     private static final String KEY_LIST = "key_list";
 
-    private static final String FILE_URL = "https://dl.dropboxusercontent.com/u/44270891/file.txt";
+    private static final String FILE_URL = "https://dl.dropboxusercontent.com/u/44270891/data.txt";
+    //private static final String FILE_URL = "https://dl.dropboxusercontent.com/u/44270891/file.txt";
 
-    private ArrayList<FileContent> mContents = new ArrayList<>();
-    private FileContentAdapter mFileContentAdapter;
+    private ArrayList<FileV2Item> mContents = new ArrayList<>();
+    private AbstractFileAdapter mFileContentAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,7 +37,7 @@ public class MainActivity extends AppCompatActivity implements DownloadFragment.
         setContentView(R.layout.activity_main);
 
         if (savedInstanceState != null) {
-            List<FileContent> contents = (List<FileContent>) savedInstanceState.getSerializable(KEY_LIST);
+            List<FileV2Item> contents = (List<FileV2Item>) savedInstanceState.getSerializable(KEY_LIST);
             if (contents != null) {
                 mContents.clear();
                 mContents.addAll(contents);
@@ -41,7 +49,7 @@ public class MainActivity extends AppCompatActivity implements DownloadFragment.
         rv.setLayoutManager(new LinearLayoutManager(this));
 
         // building adapter
-        mFileContentAdapter = new FileContentAdapter(mContents);
+        mFileContentAdapter = new FileV2Adapter(mContents);
         rv.setAdapter(mFileContentAdapter);
 
         FragmentManager fm = getSupportFragmentManager();
@@ -92,13 +100,25 @@ public class MainActivity extends AppCompatActivity implements DownloadFragment.
     public void onDownloadCompleted(String content) {
         Log.d(LOG_TAG, "download completed!");
         Log.d(LOG_TAG, content);
-        mContents.clear();
-        // parsing file content
-        String[] rows = content.split("\n");
-        for (String row : rows) {
-            mContents.add(new FileContent(row));
+        synchronized (_LOCK) {
+            int oldSize = mContents.size();
+            mContents.clear();
+            // parsing file content
+            List<FileV2Item> items = (new FileV2Parser()).parse(content);
+            // updating collection
+            mContents.addAll(items);
+            // and finally layout
+            int newSize = mContents.size();
+            if (oldSize == newSize) {
+                mFileContentAdapter.notifyItemRangeChanged(0, newSize);
+            } else if (oldSize < newSize) {
+                mFileContentAdapter.notifyItemRangeChanged(0, oldSize);
+                mFileContentAdapter.notifyItemRangeInserted(oldSize, newSize - oldSize);
+            } else {
+                mFileContentAdapter.notifyItemRangeChanged(0, newSize);
+                mFileContentAdapter.notifyItemRangeInserted(newSize, oldSize - newSize);
+            }
         }
-        mFileContentAdapter.notifyDataSetChanged();
     }
 
     @Override

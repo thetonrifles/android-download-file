@@ -6,6 +6,9 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -51,6 +54,25 @@ public class MainActivity extends AppCompatActivity implements DownloadFragment.
     }
 
     @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.menu_activity_main, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.action_sync:
+                FragmentManager fm = getSupportFragmentManager();
+                DownloadFragment fragment = (DownloadFragment) fm.findFragmentByTag("download");
+                fragment.executeDownload(FILE_URL);
+                break;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putSerializable(KEY_LIST, mContents);
@@ -76,7 +98,7 @@ public class MainActivity extends AppCompatActivity implements DownloadFragment.
         for (String row : rows) {
             mContents.add(new FileContent(row));
         }
-        mFileContentAdapter.notifyItemRangeInserted(0, mContents.size());
+        mFileContentAdapter.notifyDataSetChanged();
     }
 
     @Override

@@ -1,6 +1,8 @@
-package com.thetonrifles.downloadfile.parser;
+package com.thetonrifles.downloadfile.adapter.model;
 
-public class FileV2Item extends AbstractItem {
+import java.io.Serializable;
+
+public class FileItem implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
@@ -9,7 +11,7 @@ public class FileV2Item extends AbstractItem {
     private String image;
     private String link;
 
-    public FileV2Item() {
+    public FileItem() {
         super();
     }
 

@@ -11,10 +11,9 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.widget.TextView;
 
-import com.thetonrifles.downloadfile.adapter.AbstractFileAdapter;
-import com.thetonrifles.downloadfile.adapter.FileV2Adapter;
-import com.thetonrifles.downloadfile.parser.FileV2Item;
-import com.thetonrifles.downloadfile.parser.FileV2Parser;
+import com.thetonrifles.downloadfile.adapter.FileAdapter;
+import com.thetonrifles.downloadfile.adapter.FileParser;
+import com.thetonrifles.downloadfile.adapter.model.FileItem;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -31,23 +30,23 @@ public class MainActivity extends AppCompatActivity implements DownloadFragment.
     //private static final String FILE_URL = "https://dl.dropboxusercontent.com/u/44270891/file.txt";
 
     private TextView mTimestampView;
-    private ArrayList<FileV2Item> mContents = new ArrayList<>();
-    private AbstractFileAdapter mFileContentAdapter;
+    private ArrayList<FileItem> mContents = new ArrayList<>();
+    private FileAdapter mFileContentAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        List<FileV2Item> contents = null;
+        List<FileItem> contents = null;
 
         if (savedInstanceState != null) {
             // restoring data after configuration change (e.g. rotation)
-            contents = (List<FileV2Item>) savedInstanceState.getSerializable(KEY_LIST);
+            contents = (List<FileItem>) savedInstanceState.getSerializable(KEY_LIST);
         } else {
             // trying to get data from local storage
             String content = FileStorage.getInstance().readFile(this, FILE_URL);
-            contents = (new FileV2Parser()).parse(content);
+            contents = (new FileParser()).parse(content);
         }
 
         if (contents != null) {
@@ -64,7 +63,7 @@ public class MainActivity extends AppCompatActivity implements DownloadFragment.
         rv.setLayoutManager(new LinearLayoutManager(this));
 
         // building adapter
-        mFileContentAdapter = new FileV2Adapter(mContents);
+        mFileContentAdapter = new FileAdapter(mContents);
         rv.setAdapter(mFileContentAdapter);
 
         FragmentManager fm = getSupportFragmentManager();
@@ -129,7 +128,7 @@ public class MainActivity extends AppCompatActivity implements DownloadFragment.
             int oldSize = mContents.size();
             mContents.clear();
             // parsing file content
-            List<FileV2Item> items = (new FileV2Parser()).parse(content);
+            List<FileItem> items = (new FileParser()).parse(content);
             // updating collection
             mContents.addAll(items);
             // and finally layout

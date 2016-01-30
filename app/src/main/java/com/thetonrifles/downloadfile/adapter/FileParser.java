@@ -1,15 +1,16 @@
-package com.thetonrifles.downloadfile.parser;
+package com.thetonrifles.downloadfile.adapter;
+
+import com.thetonrifles.downloadfile.adapter.model.FileItem;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class FileV2Parser extends AbstractFileParser<FileV2Item> {
+public class FileParser {
 
-    @Override
-    public List<FileV2Item> parse(String content) {
-        List<FileV2Item> items = new ArrayList<>();
+    public List<FileItem> parse(String content) {
+        List<FileItem> items = new ArrayList<>();
         String[] lines = content.split("\n");
-        FileV2Item item = new FileV2Item();
+        FileItem item = new FileItem();
         for (String line : lines) {
             if (line.contains(":")) {
                 int index = line.indexOf(":");
@@ -31,7 +32,7 @@ public class FileV2Parser extends AbstractFileParser<FileV2Item> {
             }
             if (line.contains("-")) {
                 items.add(item);
-                item = new FileV2Item();
+                item = new FileItem();
             }
         }
         return items;

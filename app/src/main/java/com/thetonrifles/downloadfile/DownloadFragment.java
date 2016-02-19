@@ -29,7 +29,9 @@ public class DownloadFragment extends Fragment {
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-        mCallback = (MainActivity) context;
+        if (context instanceof Callback) {
+            mCallback = (Callback) context;
+        }
     }
 
     @Override
